@@ -27,7 +27,7 @@ Run the TypeScript project check and production build with:
 npm run build
 ```
 
-On 2026-10-30, this command completed successfully: `tsc -b` passed and Vite generated the production build. Vite reported that the Arithmetic bundle (642.13 kB) and Advanced bundle (440.81 kB) exceed its 500 kB chunk warning threshold. No automated test script or test files are currently present.
+On 2026-10-30, this command completed successfully: `tsc -b` passed and Vite generated the production build. Vite warned that the Arithmetic bundle (642.13 kB) exceeds its 500 kB chunk warning threshold. The Advanced bundle is 440.81 kB, below that threshold. No automated test script or test files are currently present.
 
 ## Notes
 
