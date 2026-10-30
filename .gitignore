@@ -1,0 +1,20 @@
+# Dependencies and build output
+/node_modules/
+/dist/
+/build/
+/coverage/
+
+# Local environment and credentials
+.env*
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# TypeScript build metadata and generated Vite config output
+*.tsbuildinfo
+/vite.config.js
+/vite.config.d.ts
