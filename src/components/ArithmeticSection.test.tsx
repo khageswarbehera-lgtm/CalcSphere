@@ -10,7 +10,7 @@ function resultText() {
 function calculate(expression: string) {
   render(<ArithmeticSection />)
   fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: expression } })
-  fireEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+  fireEvent.click(screen.getByRole('button', { name: '=' }))
 }
 
 describe('ArithmeticSection', () => {
@@ -86,14 +86,14 @@ describe('ArithmeticSection', () => {
 
   it('shows nothing for an empty expression', () => {
     render(<ArithmeticSection />)
-    fireEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+    fireEvent.click(screen.getByRole('button', { name: '=' }))
     expect(document.querySelector('output.result')).toBeNull()
   })
 
   it('clears the expression', () => {
     render(<ArithmeticSection />)
     fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '123' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
+    fireEvent.click(screen.getByRole('button', { name: 'AC' }))
     expect(screen.getByPlaceholderText('0')).toHaveValue('')
     expect(document.querySelector('output.result')).toBeNull()
   })
@@ -150,7 +150,7 @@ describe('ArithmeticSection', () => {
     fireEvent.click(screen.getByRole('button', { name: '7' }))
     fireEvent.click(screen.getByRole('button', { name: '+' }))
     fireEvent.click(screen.getByRole('button', { name: '3' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+    fireEvent.click(screen.getByRole('button', { name: '=' }))
     expect(resultText()).toBe('10')
   })
 })

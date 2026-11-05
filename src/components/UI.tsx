@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
 export function Card({
   title,
@@ -9,7 +9,7 @@ export function Card({
 }) {
   return (
     <section className="card">
-      <h2>{title}</h2>
+      <h2 className="card-title">{title}</h2>
       {children}
     </section>
   )

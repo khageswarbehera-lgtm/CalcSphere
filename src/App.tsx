@@ -22,63 +22,96 @@ type Section = 'home' | 'arithmetic' | 'scientific' | 'advanced' | 'physics' | '
 
 export default function App() {
   const [section, setSection] = useState<Section>('home')
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  const navItems: { id: Section; label: string }[] = [
-    { id: 'home', label: 'Home' },
-    { id: 'arithmetic', label: 'Arithmetic' },
-    { id: 'scientific', label: 'Scientific' },
-    { id: 'advanced', label: 'Advanced' },
-    { id: 'physics', label: 'Physics' },
-    { id: 'finance', label: 'Finance' },
-    { id: 'everyday', label: 'Everyday Math' },
-    { id: 'matrix', label: 'Matrix & Vector' },
-{ id: 'numerical', label: 'Numerical Math' },
-{ id: 'statistics', label: 'Statistics & Probability' },
-{ id: 'electricity', label: 'Electricity & Circuits' },
-{ id: 'waves', label: 'Waves, Optics, Heat & Fluids' },
-{ id: 'formulas', label: 'Formula Library' },
-{ id: 'utilities', label: 'Financial Utilities' },
-{ id: 'units', label: 'Unit Converter' },
-{ id: 'history', label: 'History & Favorites' },
-{ id: 'directory', label: 'Calculator Directory' },
-{ id: 'graphing', label: 'Function Graphing' },
+  const navItems: { id: Section; label: string; icon: string; description: string }[] = [
+    { id: 'home', label: 'Home', icon: '⌂', description: 'Your calculation workspace' },
+    { id: 'arithmetic', label: 'Arithmetic', icon: '＋', description: 'Everyday expressions and quick answers' },
+    { id: 'scientific', label: 'Scientific', icon: '∑', description: 'Functions, roots, logarithms, and more' },
+    { id: 'advanced', label: 'Advanced', icon: 'ƒ', description: 'Equations, calculus, and complex numbers' },
+    { id: 'physics', label: 'Physics', icon: '◉', description: 'Motion, energy, force, and mechanics' },
+    { id: 'finance', label: 'Finance', icon: '₹', description: 'Loans, investments, interest, and GST' },
+    { id: 'everyday', label: 'Everyday Math', icon: '%', description: 'Percentages, ratios, fractions, and averages' },
+    { id: 'matrix', label: 'Matrix & Vector', icon: '▦', description: 'Matrices, vectors, and transformations' },
+    { id: 'numerical', label: 'Numerical Math', icon: '≈', description: 'Limits, series, roots, and integration' },
+    { id: 'statistics', label: 'Statistics & Probability', icon: '◌', description: 'Data analysis and probability tools' },
+    { id: 'electricity', label: 'Electricity & Circuits', icon: 'ϟ', description: 'Power, resistance, and circuit laws' },
+    { id: 'waves', label: 'Waves, Optics, Heat & Fluids', icon: '⌁', description: 'Applied science calculation tools' },
+    { id: 'formulas', label: 'Formula Library', icon: '≡', description: 'Searchable science and maths formulas' },
+    { id: 'utilities', label: 'Financial Utilities', icon: '▣', description: 'Tax, salary, and financial planning' },
+    { id: 'units', label: 'Unit Converter', icon: '⇄', description: 'Convert common units with precision' },
+    { id: 'history', label: 'History & Favorites', icon: '◷', description: 'Review and reuse past calculations' },
+    { id: 'directory', label: 'Calculator Directory', icon: '▤', description: 'Browse every CalcSphere tool' },
+    { id: 'graphing', label: 'Function Graphing', icon: '⌇', description: 'Visualize equations and functions' },
   ]
+  const primaryItems = navItems.slice(0, 8)
+  const secondaryItems = navItems.slice(8)
+  const selectSection = (nextSection: Section) => {
+    setSection(nextSection)
+    setMenuOpen(false)
+  }
+
+  const renderNavItems = (items: typeof navItems) => items.map(item => (
+    <button
+      key={item.id}
+      className={section === item.id ? 'active' : ''}
+      aria-current={section === item.id ? 'page' : undefined}
+      onClick={() => selectSection(item.id)}
+    >
+      {item.label}
+    </button>
+  ))
 
   return (
-<main id="main-content">
+    <main id="main-content">
         <a href="#main-content" className="skip-link">Skip to main content</a>
-      <header>
-        <div>
-          <p className="eyebrow">EVERYDAY CALCULATIONS</p>
-          <h1>
-            Calc<span>Space</span>
-          </h1>
+      <header className="app-header">
+        <div className="brand">
+          <div className="brand-mark" aria-hidden="true">∑</div>
+          <div>
+            <p className="eyebrow">PRECISION CALCULATORS</p>
+            <h1>Calc<span>Sphere</span></h1>
+            <p className="brand-tagline">Calculate Everything. Understand Anything.</p>
+          </div>
         </div>
 
-        <nav aria-label="Primary">
-          {navItems.map(item => (
-<button
-              key={item.id}
-              className={section === item.id ? 'active' : ''}
-              aria-current={section === item.id ? 'page' : undefined}
-              onClick={() => setSection(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+        <button
+          className="nav-toggle"
+          type="button"
+          aria-expanded={menuOpen}
+          aria-controls="site-navigation"
+          onClick={() => setMenuOpen(open => !open)}
+        >
+          <span aria-hidden="true">☰</span>
+          {menuOpen ? 'Close menu' : 'Menu'}
+        </button>
+        <nav id="site-navigation" className={menuOpen ? 'menu-open' : ''} aria-label="Calculator navigation">
+          <div className="nav-group nav-primary">
+            <p>Core calculators</p>
+            <div>{renderNavItems(primaryItems)}</div>
+          </div>
+          <div className="nav-group nav-secondary">
+            <p>More tools</p>
+            <div>{renderNavItems(secondaryItems)}</div>
+          </div>
         </nav>
       </header>
 
       <Suspense fallback={<div>Loading...</div>}>
         {section === 'home' && (
           <div className="intro">
-            <h2>Welcome to CalcSpace</h2>
-            <p>Select a category from the navigation to begin.</p>
+            <div className="hero-copy">
+              <p className="eyebrow">ONE PLATFORM, EVERY FORMULA</p>
+              <h2>Welcome to CalcSphere</h2>
+              <p>Choose a purpose-built calculator and get clear, reliable answers without leaving your workspace.</p>
+            </div>
             <div className="dashboard-grid">
               {navItems.filter(item => item.id !== 'home').map(item => (
-                <button key={item.id} className="category-card" onClick={() => setSection(item.id)}>
+                <button key={item.id} className="category-card" onClick={() => selectSection(item.id)}>
+                  <span className="category-icon" aria-hidden="true">{item.icon}</span>
                   <strong>{item.label}</strong>
-                  <span>Open calculator</span>
+                  <span className="category-description">{item.description}</span>
+                  <span className="category-action">Open calculator <span aria-hidden="true">→</span></span>
                 </button>
               ))}
             </div>
@@ -104,7 +137,9 @@ export default function App() {
       </Suspense>
 
       <footer>
-        Results are estimates; verify financial decisions with your lender.
+        <strong>CalcSphere</strong>
+        <span>Professional calculators for everyday decisions.</span>
+        <span>© {new Date().getFullYear()} CalcSphere. Results are estimates; verify financial decisions with your lender.</span>
       </footer>
     </main>
   )

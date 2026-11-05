@@ -1,4 +1,4 @@
-# CalcSpace Deployment Checklist
+# CalcSphere Deployment Checklist
 
 ## Build Verification
 - [x] Run `npm run build` - must complete successfully

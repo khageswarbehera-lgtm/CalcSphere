@@ -14,6 +14,13 @@ const KEYS = [
   '-', '0', '.', '+',
 ]
 
+function keyTone(key: string): string {
+  if (['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'log(', 'ln(', 'exp(', 'sqrt('].includes(key)) return 'scientific-function'
+  if (['^', '!', '(', ')', '/', '*', '-', '+'].includes(key)) return 'key-operator'
+  if (['pi', 'e'].includes(key)) return 'key-utility'
+  return 'key-number'
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof CalculationError) {
     switch (error.code) {
@@ -83,7 +90,7 @@ export function ScientificSection() {
   }, [result])
 
   return (
-    <div className="grid math-grid">
+    <div className="grid math-grid calculator-layout">
       <Card title="Scientific">
         <div className="angle-mode">
           <span>Angle mode: {angleMode === 'deg' ? 'Degrees' : 'Radians'}</span>
@@ -92,7 +99,7 @@ export function ScientificSection() {
           </button>
         </div>
 
-        <div className="display-area">
+        <div className="display-area calculator-display scientific-display">
           <input
             id="scientific-expression"
             className="expression"
@@ -104,9 +111,9 @@ export function ScientificSection() {
           {result && <output className="result">{result}</output>}
         </div>
 
-        <div className="keypad">
+        <div className="keypad scientific-keypad">
           {KEYS.map(key => (
-            <button key={key} onClick={() => appendKey(key)}>{key}</button>
+            <button key={key} type="button" className={keyTone(key)} onClick={() => appendKey(key)}>{key}</button>
           ))}
         </div>
 

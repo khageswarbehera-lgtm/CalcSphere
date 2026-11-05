@@ -8,6 +8,7 @@ export function ArithmeticSection() {
   const [expression, setExpression] = useState('')
   const [answer, setAnswer] = useState('')
   const [history, setHistory] = useState<string[]>([])
+  const [copied, setCopied] = useState(false)
 
   const check = useCallback(() => {
     if (!expression.trim()) return
@@ -28,9 +29,11 @@ export function ArithmeticSection() {
       }
       const result = evaluated.toString()
       setAnswer(result)
+      setCopied(false)
       setHistory(items => [`${expression} = ${result}`, ...items].slice(0, 6))
     } catch {
       setAnswer('Invalid expression')
+      setCopied(false)
     }
   }, [expression])
 
@@ -38,6 +41,7 @@ export function ArithmeticSection() {
   const clear = useCallback(() => {
     setExpression('')
     setAnswer('')
+    setCopied(false)
   }, [])
   const backspace = useCallback(() => setExpression(value => value.slice(0, -1)), [])
 
@@ -59,35 +63,56 @@ export function ArithmeticSection() {
   }, [backspace, check, clear])
 
   const copyResult = async () => {
-    if (!answer || !navigator.clipboard?.writeText) return
+    if (!answer || ['Division by zero', 'Domain error', 'Invalid expression'].includes(answer) || !navigator.clipboard?.writeText) return
     await navigator.clipboard.writeText(answer)
-    setAnswer('Copied')
+    setCopied(true)
   }
 
-  const keys = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '(', ')', '+', '^', '!', '/']
+  const keys = [
+    { label: 'AC', action: clear, tone: 'utility' },
+    { label: '%', value: '%', tone: 'utility' },
+    { label: '⌫', action: backspace, tone: 'utility', ariaLabel: 'Backspace' },
+    { label: '÷', value: '÷', tone: 'operator' },
+    { label: '7', value: '7' }, { label: '8', value: '8' }, { label: '9', value: '9' }, { label: '×', value: '×', tone: 'operator' },
+    { label: '4', value: '4' }, { label: '5', value: '5' }, { label: '6', value: '6' }, { label: '−', value: '-', tone: 'operator' },
+    { label: '1', value: '1' }, { label: '2', value: '2' }, { label: '3', value: '3' }, { label: '+', value: '+', tone: 'operator' },
+    { label: '00', value: '00' }, { label: '0', value: '0' }, { label: '.', value: '.' }, { label: '=', action: check, tone: 'equals' },
+  ]
 
   return (
-    <div className="grid math-grid">
+    <div className="grid math-grid calculator-layout">
       <Card title="Arithmetic">
-        <div className="display-area">
+        <div className="display-area calculator-display">
           <input 
             className="expression" 
             value={expression} 
             onChange={e => setExpression(e.target.value)}
             placeholder="0"
+            aria-label="Arithmetic expression"
           />
-          {answer && <output className="result">{answer}</output>}
+          <div className="display-result" aria-live="polite">
+            <span>Result</span>
+            {answer && <output className={`result${['Division by zero', 'Domain error', 'Invalid expression'].includes(answer) ? ' result--error' : ''}`}>{answer}</output>}
+          </div>
         </div>
 
-        <div className="keypad">
-          {keys.map(key => <button key={key} onClick={() => addKey(key)}>{key}</button>)}
+        <div className="keypad calculator-keypad">
+          {keys.map(key => (
+            <button
+              key={key.label}
+              type="button"
+              className={key.tone ? `key-${key.tone}` : 'key-number'}
+              aria-label={key.ariaLabel}
+              onClick={() => key.action ? key.action() : addKey(key.value!)}
+            >
+              {key.label}
+            </button>
+          ))}
         </div>
 
-        <div className="action-buttons">
-          <button className="primary" onClick={check}>Calculate</button>
-          <button onClick={backspace}>Backspace</button>
-          <button onClick={clear}>Clear</button>
-          {answer && answer !== 'Copied' && <button onClick={copyResult}>Copy result</button>}
+        <div className="calculator-tools">
+          {answer && <button type="button" onClick={copyResult}>Copy result</button>}
+          {copied && <span className="copy-feedback" role="status">Copied</span>}
         </div>
         {history.length > 0 && (
           <div className="history" aria-label="Calculation history">

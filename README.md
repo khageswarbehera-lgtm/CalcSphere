@@ -1,19 +1,19 @@
-# CalcSpace
+# CalcSphere
 
-**CalcSpace** - Everyday Calculations
+**CalcSphere** — Calculate Everything. Understand Anything.
 
 A comprehensive, client-side web calculator application covering mathematics, physics, finance, unit conversions, and more. All calculations run entirely in the browser with no network required.
 
 
 ## 📱 Live Demo
 
-Visit your deployed CalcSpace instance.
+Visit your deployed CalcSphere instance.
 
 ## ✨ Features
 
 ### Calculator Categories
 
-CalcSpace includes over 20 calculator categories:
+CalcSphere includes over 20 calculator categories:
 
 | Category | Description |
 |---|---|
@@ -86,7 +86,7 @@ npm run test -- --coverage
 ## 📁 Project Structure
 
 `
-calcspace/
+calcsphere/
 ├── src/
 │   ├── App.tsx          # Main application component with lazy loading
 │   ├── main.tsx         # Application entry point
