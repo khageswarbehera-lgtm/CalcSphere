@@ -1,49 +1,113 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { create, all } from 'mathjs'
+import { getExactResult, formatDecimalResult } from '../calc/exactResults'
 import { Card } from './UI'
+import { CalculatorResultPanel } from './CalculatorResultPanel'
 
 const math = create(all)
 
+type CalculationResult = {
+  exact?: string
+  decimal?: string
+  error?: string
+}
+
+type Key = {
+  label: string
+  value?: string
+  tone?: string
+  action?: () => void
+  ariaLabel?: string
+}
+
 export function ArithmeticSection() {
   const [expression, setExpression] = useState('')
-  const [answer, setAnswer] = useState('')
+  const [result, setResult] = useState<CalculationResult>()
   const [history, setHistory] = useState<string[]>([])
   const [copied, setCopied] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const pendingCaret = useRef<number | null>(null)
+
+  useLayoutEffect(() => {
+    if (pendingCaret.current === null || !inputRef.current) return
+    const caret = pendingCaret.current
+    pendingCaret.current = null
+    inputRef.current.focus()
+    inputRef.current.setSelectionRange(caret, caret)
+  }, [expression])
 
   const check = useCallback(() => {
-    if (!expression.trim()) return
+    if (!expression.trim()) {
+      setResult(undefined)
+      return
+    }
+
+    let depth = 0
+    for (const character of expression) {
+      if (character === '(') depth += 1
+      if (character === ')') depth -= 1
+      if (depth < 0) {
+        setResult({ error: 'Unmatched parentheses' })
+        return
+      }
+    }
+    if (depth !== 0) {
+      setResult({ error: 'Unmatched parentheses' })
+      return
+    }
 
     try {
-      const normalized = expression
-        .split('×').join('*')
-        .split('÷').join('/')
-
+      const normalized = expression.replace(/×/g, '*').replace(/÷/g, '/')
       const evaluated = math.evaluate(normalized)
-      if (typeof evaluated === 'number' && !Number.isFinite(evaluated)) {
-        setAnswer('Division by zero')
-        return
-      }
       if (evaluated && typeof evaluated === 'object' && 'im' in evaluated && Number((evaluated as { im: number }).im) !== 0) {
-        setAnswer('Domain error')
+        setResult({ error: 'Domain error' })
         return
       }
-      const result = evaluated.toString()
-      setAnswer(result)
+      const numericValue = Number(evaluated)
+      if (!Number.isFinite(numericValue)) {
+        setResult({ error: 'Division by zero' })
+        return
+      }
+      const exact = getExactResult(normalized, numericValue)
+      const decimal = formatDecimalResult(numericValue)
+      setResult({ exact, decimal })
       setCopied(false)
-      setHistory(items => [`${expression} = ${result}`, ...items].slice(0, 6))
+      setHistory(items => [`${expression} = ${exact ?? decimal}`, ...items].slice(0, 6))
     } catch {
-      setAnswer('Invalid expression')
+      setResult({ error: 'Invalid expression' })
       setCopied(false)
     }
   }, [expression])
 
-  const addKey = (key: string) => setExpression(val => val + (key === '(' ? '()' : key))
+  const insertKey = useCallback((key: string) => {
+    const input = inputRef.current
+    const start = input?.selectionStart ?? expression.length
+    const end = input?.selectionEnd ?? start
+    const nextExpression = `${expression.slice(0, start)}${key}${expression.slice(end)}`
+    pendingCaret.current = start + key.length
+    setExpression(nextExpression)
+    setResult(undefined)
+    setCopied(false)
+  }, [expression])
+
   const clear = useCallback(() => {
+    pendingCaret.current = 0
     setExpression('')
-    setAnswer('')
+    setResult(undefined)
     setCopied(false)
   }, [])
-  const backspace = useCallback(() => setExpression(value => value.slice(0, -1)), [])
+
+  const backspace = useCallback(() => {
+    const input = inputRef.current
+    let start = input?.selectionStart ?? expression.length
+    const end = input?.selectionEnd ?? start
+    if (start === end && start > 0) start -= 1
+    if (start === end) return
+    pendingCaret.current = start
+    setExpression(`${expression.slice(0, start)}${expression.slice(end)}`)
+    setResult(undefined)
+    setCopied(false)
+  }, [expression])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -63,37 +127,46 @@ export function ArithmeticSection() {
   }, [backspace, check, clear])
 
   const copyResult = async () => {
-    if (!answer || ['Division by zero', 'Domain error', 'Invalid expression'].includes(answer) || !navigator.clipboard?.writeText) return
-    await navigator.clipboard.writeText(answer)
+    const value = result?.exact ?? result?.decimal
+    if (!value || !navigator.clipboard?.writeText) return
+    await navigator.clipboard.writeText(value)
     setCopied(true)
   }
 
-  const keys = [
+  const keys: Key[] = [
     { label: 'AC', action: clear, tone: 'utility' },
-    { label: '%', value: '%', tone: 'utility' },
+    { label: '(', value: '(', tone: 'utility' },
+    { label: ')', value: ')', tone: 'utility' },
     { label: '⌫', action: backspace, tone: 'utility', ariaLabel: 'Backspace' },
-    { label: '÷', value: '÷', tone: 'operator' },
-    { label: '7', value: '7' }, { label: '8', value: '8' }, { label: '9', value: '9' }, { label: '×', value: '×', tone: 'operator' },
-    { label: '4', value: '4' }, { label: '5', value: '5' }, { label: '6', value: '6' }, { label: '−', value: '-', tone: 'operator' },
-    { label: '1', value: '1' }, { label: '2', value: '2' }, { label: '3', value: '3' }, { label: '+', value: '+', tone: 'operator' },
-    { label: '00', value: '00' }, { label: '0', value: '0' }, { label: '.', value: '.' }, { label: '=', action: check, tone: 'equals' },
+    { label: '7', value: '7' }, { label: '8', value: '8' }, { label: '9', value: '9' }, { label: '÷', value: '÷', tone: 'operator' },
+    { label: '4', value: '4' }, { label: '5', value: '5' }, { label: '6', value: '6' }, { label: '×', value: '×', tone: 'operator' },
+    { label: '1', value: '1' }, { label: '2', value: '2' }, { label: '3', value: '3' }, { label: '−', value: '-', tone: 'operator' },
+    { label: '00', value: '00' }, { label: '0', value: '0' }, { label: '.', value: '.' }, { label: '+', value: '+', tone: 'operator' },
+    { label: '%', value: '%', tone: 'utility' }, { label: '^', value: '^', tone: 'operator' }, { label: '!', value: '!', tone: 'operator' }, { label: '=', action: check, tone: 'equals' },
   ]
 
   return (
     <div className="grid math-grid calculator-layout">
       <Card title="Arithmetic">
         <div className="display-area calculator-display">
-          <input 
-            className="expression" 
-            value={expression} 
-            onChange={e => setExpression(e.target.value)}
+          <input
+            ref={inputRef}
+            className="expression"
+            value={expression}
+            onChange={event => {
+              setExpression(event.target.value)
+              setResult(undefined)
+              setCopied(false)
+            }}
             placeholder="0"
             aria-label="Arithmetic expression"
           />
-          <div className="display-result" aria-live="polite">
-            <span>Result</span>
-            {answer && <output className={`result${['Division by zero', 'Domain error', 'Invalid expression'].includes(answer) ? ' result--error' : ''}`}>{answer}</output>}
-          </div>
+          <CalculatorResultPanel
+            expression={expression}
+            exactResult={result?.exact}
+            decimalResult={result?.decimal}
+            error={result?.error}
+          />
         </div>
 
         <div className="keypad calculator-keypad">
@@ -103,7 +176,7 @@ export function ArithmeticSection() {
               type="button"
               className={key.tone ? `key-${key.tone}` : 'key-number'}
               aria-label={key.ariaLabel}
-              onClick={() => key.action ? key.action() : addKey(key.value!)}
+              onClick={() => key.action ? key.action() : insertKey(key.value ?? key.label)}
             >
               {key.label}
             </button>
@@ -111,7 +184,7 @@ export function ArithmeticSection() {
         </div>
 
         <div className="calculator-tools">
-          {answer && <button type="button" onClick={copyResult}>Copy result</button>}
+          {result?.decimal && <button type="button" onClick={copyResult}>Copy result</button>}
           {copied && <span className="copy-feedback" role="status">Copied</span>}
         </div>
         {history.length > 0 && (

@@ -44,6 +44,15 @@ describe('ArithmeticSection', () => {
     expect(resultText()).toBe('8')
   })
 
+  it('evaluates nested parentheses and reports unmatched parentheses', () => {
+    calculate('((2 + 3) * 4)')
+    expect(resultText()).toBe('20')
+    render(<ArithmeticSection />)
+    fireEvent.change(screen.getAllByPlaceholderText('0')[1], { target: { value: '(2 + 3' } })
+    fireEvent.click(screen.getAllByRole('button', { name: '=' })[1])
+    expect(screen.getAllByText('Unmatched parentheses')).toHaveLength(1)
+  })
+
   it('evaluates square roots', () => {
     calculate('sqrt(9)')
     expect(resultText()).toBe('3')
@@ -61,7 +70,8 @@ describe('ArithmeticSection', () => {
 
   it('handles percentages as postfix fractions', () => {
     calculate('50%')
-    expect(resultText()).toBe('0.5')
+    expect(resultText()).toBe('1/2')
+    expect(screen.getByText('0.5')).toBeInTheDocument()
   })
 
   it('evaluates logarithms', () => {
@@ -107,7 +117,7 @@ describe('ArithmeticSection', () => {
 
   it('supports keyboard Enter to calculate', () => {
     render(<ArithmeticSection />)
-    const input = screen.getByPlaceholderText('0')
+    const input = screen.getByPlaceholderText('0') as HTMLInputElement
     fireEvent.change(input, { target: { value: '2 + 3' } })
     fireEvent.keyDown(window, { key: 'Enter' })
     expect(resultText()).toBe('5')
@@ -152,5 +162,34 @@ describe('ArithmeticSection', () => {
     fireEvent.click(screen.getByRole('button', { name: '3' }))
     fireEvent.click(screen.getByRole('button', { name: '=' }))
     expect(resultText()).toBe('10')
+  })
+
+  it('inserts parentheses and operators using the keypad', () => {
+    render(<ArithmeticSection />)
+    fireEvent.click(screen.getByRole('button', { name: '(' }))
+    fireEvent.click(screen.getByRole('button', { name: '2' }))
+    fireEvent.click(screen.getByRole('button', { name: '+' }))
+    fireEvent.click(screen.getByRole('button', { name: '3' }))
+    fireEvent.click(screen.getByRole('button', { name: ')' }))
+    fireEvent.click(screen.getByRole('button', { name: '=' }))
+    expect(resultText()).toBe('5')
+  })
+
+  it('inserts keypad input at the selected cursor position', () => {
+    render(<ArithmeticSection />)
+    const input = screen.getByPlaceholderText('0') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '13' } })
+    input.setSelectionRange(1, 1)
+    fireEvent.click(screen.getByRole('button', { name: '+' }))
+    expect(input).toHaveValue('1+3')
+  })
+
+  it('displays checked exact and decimal results', () => {
+    render(<ArithmeticSection />)
+    fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '1 / 3' } })
+    fireEvent.click(screen.getByRole('button', { name: '=' }))
+    expect(screen.getByText('Exact result')).toBeInTheDocument()
+    expect(screen.getByText('1/3')).toBeInTheDocument()
+    expect(screen.getByText('0.33333333')).toBeInTheDocument()
   })
 })
