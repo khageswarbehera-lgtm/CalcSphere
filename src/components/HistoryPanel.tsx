@@ -1,0 +1,1 @@
+export { HistorySection as HistoryPanel } from './HistorySection'

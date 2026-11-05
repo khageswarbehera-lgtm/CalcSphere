@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { create, all } from 'mathjs'
 import { Card } from './UI'
 
@@ -9,7 +9,7 @@ export function ArithmeticSection() {
   const [answer, setAnswer] = useState('')
   const [history, setHistory] = useState<string[]>([])
 
-  const check = () => {
+  const check = useCallback(() => {
     if (!expression.trim()) return
 
     try {
@@ -17,15 +17,52 @@ export function ArithmeticSection() {
         .split('×').join('*')
         .split('÷').join('/')
 
-      const result = math.evaluate(normalized).toString()
+      const evaluated = math.evaluate(normalized)
+      if (typeof evaluated === 'number' && !Number.isFinite(evaluated)) {
+        setAnswer('Division by zero')
+        return
+      }
+      if (evaluated && typeof evaluated === 'object' && 'im' in evaluated && Number((evaluated as { im: number }).im) !== 0) {
+        setAnswer('Domain error')
+        return
+      }
+      const result = evaluated.toString()
       setAnswer(result)
       setHistory(items => [`${expression} = ${result}`, ...items].slice(0, 6))
     } catch {
       setAnswer('Invalid expression')
     }
-  }
+  }, [expression])
 
   const addKey = (key: string) => setExpression(val => val + (key === '(' ? '()' : key))
+  const clear = useCallback(() => {
+    setExpression('')
+    setAnswer('')
+  }, [])
+  const backspace = useCallback(() => setExpression(value => value.slice(0, -1)), [])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        check()
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        clear()
+      } else if (event.key === 'Backspace') {
+        event.preventDefault()
+        backspace()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [backspace, check, clear])
+
+  const copyResult = async () => {
+    if (!answer || !navigator.clipboard?.writeText) return
+    await navigator.clipboard.writeText(answer)
+    setAnswer('Copied')
+  }
 
   const keys = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '(', ')', '+', '^', '!', '/']
 
@@ -48,8 +85,18 @@ export function ArithmeticSection() {
 
         <div className="action-buttons">
           <button className="primary" onClick={check}>Calculate</button>
-          <button onClick={() => {setExpression(''); setAnswer('')}}>Clear</button>
+          <button onClick={backspace}>Backspace</button>
+          <button onClick={clear}>Clear</button>
+          {answer && answer !== 'Copied' && <button onClick={copyResult}>Copy result</button>}
         </div>
+        {history.length > 0 && (
+          <div className="history" aria-label="Calculation history">
+            {history.map(entry => {
+              const [savedExpression] = entry.split(' = ')
+              return <button key={entry} onClick={() => setExpression(savedExpression)}>{entry}</button>
+            })}
+          </div>
+        )}
       </Card>
     </div>
   )

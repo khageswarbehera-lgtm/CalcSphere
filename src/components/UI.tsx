@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useId, useMemo, useState, type ReactNode } from 'react'
 
 export function Card({
   title,
@@ -26,26 +26,24 @@ export function NumberInput({
   onChange: (value: number) => void
   suffix?: string
 }) {
+  const id = useId()
   return (
     <div className="input-group">
-      <label>{label}</label>
+      <label htmlFor={id}>{label}</label>
       <div className="number-input-wrapper">
         <input
+          id={id}
           type="number"
           placeholder="0"
           value={value === 0 ? '' : value}
           onChange={event => onChange(parseFloat(event.target.value) || 0)}
+          aria-label={label}
         />
-        {suffix && <span className="suffix">{suffix}</span>}
+        {suffix && <span className="suffix" aria-hidden="true">{suffix}</span>}
       </div>
-      <div className="input-feedback">Active value: {value}</div>
+      <div className="input-feedback" aria-live="polite">Active value: {value}</div>
     </div>
   )
 }
 
-export const moneyFormat = (value: number) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(value)
+export { moneyFormat } from '../calc/formatting'
