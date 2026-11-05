@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 
 const ArithmeticSection = lazy(() => import('./components/ArithmeticSection').then(m => ({ default: m.ArithmeticSection })))
 const AdvancedSection = lazy(() => import('./components/AdvancedSection').then(m => ({ default: m.AdvancedSection })))
@@ -23,6 +23,7 @@ type Section = 'home' | 'arithmetic' | 'scientific' | 'advanced' | 'physics' | '
 export default function App() {
   const [section, setSection] = useState<Section>('home')
   const [menuOpen, setMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
 
   const navItems: { id: Section; label: string; icon: string; description: string }[] = [
     { id: 'home', label: 'Home', icon: '⌂', description: 'Your calculation workspace' },
@@ -51,6 +52,22 @@ export default function App() {
     setMenuOpen(false)
   }
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+    }
+  }, [menuOpen])
+
   const renderNavItems = (items: typeof navItems) => items.map(item => (
     <button
       key={item.id}
@@ -65,36 +82,39 @@ export default function App() {
   return (
     <main id="main-content">
         <a href="#main-content" className="skip-link">Skip to main content</a>
-      <header className="app-header">
-        <div className="brand">
-          <div className="brand-mark" aria-hidden="true">∑</div>
-          <div>
-            <p className="eyebrow">PRECISION CALCULATORS</p>
-            <h1>Calc<span>Sphere</span></h1>
-            <p className="brand-tagline">Calculate Everything. Understand Anything.</p>
+      <header ref={headerRef} className="application-header">
+        <div className="header-brand-row">
+          <div className="brand">
+            <div className="brand-mark" aria-hidden="true">∑</div>
+            <div>
+              <p className="eyebrow">PRECISION CALCULATORS</p>
+              <h1>Calc<span>Sphere</span></h1>
+              <p className="brand-tagline">Calculate Everything. Understand Anything.</p>
+            </div>
           </div>
+          <button
+            className="nav-toggle"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="site-navigation"
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            <span aria-hidden="true">☰</span>
+            {menuOpen ? 'Close menu' : 'Menu'}
+          </button>
         </div>
-
-        <button
-          className="nav-toggle"
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls="site-navigation"
-          onClick={() => setMenuOpen(open => !open)}
-        >
-          <span aria-hidden="true">☰</span>
-          {menuOpen ? 'Close menu' : 'Menu'}
-        </button>
-        <nav id="site-navigation" className={menuOpen ? 'menu-open' : ''} aria-label="Calculator navigation">
-          <div className="nav-group nav-primary">
-            <p>Core calculators</p>
-            <div>{renderNavItems(primaryItems)}</div>
-          </div>
-          <div className="nav-group nav-secondary">
-            <p>More tools</p>
-            <div>{renderNavItems(secondaryItems)}</div>
-          </div>
-        </nav>
+        <div className="header-nav-region">
+          <nav id="site-navigation" className={`header-navigation${menuOpen ? ' menu-open' : ''}`} aria-label="Calculator navigation">
+            <div className="nav-group nav-primary">
+              <p>Core calculators</p>
+              <div>{renderNavItems(primaryItems)}</div>
+            </div>
+            <div className="nav-group nav-secondary">
+              <p>More tools</p>
+              <div>{renderNavItems(secondaryItems)}</div>
+            </div>
+          </nav>
+        </div>
       </header>
 
       <Suspense fallback={<div>Loading...</div>}>

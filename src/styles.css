@@ -84,6 +84,48 @@ nav { display:flex; align-items:flex-start; gap:16px; }
   .scientific-keypad .scientific-function { font-size:.61rem; }
   .nav-group > div { grid-template-columns:1fr; }
 }
+
+/* Header layout replacement: standalone brand, primary navigation, then tool navigation. */
+.application-header { overflow:visible; margin-bottom:28px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); }
+.header-brand-row { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 22px; }
+.application-header .brand { gap:13px; }
+.application-header .brand-mark { width:44px; height:44px; border-color:rgba(101,213,204,.55); background:#132b42; }
+.application-header .header-nav-region { padding:12px 22px 16px; border-top:1px solid var(--border); }
+.application-header .header-navigation { display:grid; gap:12px; max-width:none; }
+.application-header .nav-group { display:grid; grid-template-columns:112px minmax(0,1fr); align-items:start; gap:12px; }
+.application-header .nav-group p { margin:9px 0 0; color:var(--text-subtle); font:500 .66rem/1.2 'DM Mono',monospace; letter-spacing:.11em; text-transform:uppercase; }
+.application-header .nav-group > div { display:flex; flex-wrap:wrap; gap:7px; }
+.application-header .nav-secondary { max-width:none; padding-top:12px; border-top:1px solid rgba(38,59,87,.72); }
+.application-header .header-navigation button { min-height:36px; padding:7px 11px; color:var(--text-muted); background:#172840; border:1px solid #263b57; border-radius:9px; font-size:.78rem; white-space:nowrap; }
+.application-header .header-navigation button:hover { color:var(--text); background:#203957; border-color:#4c718e; }
+.application-header .header-navigation button.active { color:var(--accent-contrast); background:var(--accent); border-color:var(--accent); font-weight:700; }
+.application-header .nav-toggle { display:none; }
+
+@media (max-width:760px) {
+  .application-header { margin:0 -2px 22px; border-radius:14px; }
+  .header-brand-row { padding:13px 14px; }
+  .application-header .brand-mark { width:38px; height:38px; border-radius:11px; font-size:21px; }
+  .application-header h1 { font-size:1.45rem; }
+  .application-header .eyebrow { font-size:9px; }
+  .application-header .brand-tagline { font-size:.72rem; }
+  .application-header .nav-toggle { display:inline-flex; flex:0 0 auto; min-height:38px; padding:8px 10px; color:var(--text); background:#172840; border-color:var(--border-strong); font-size:.76rem; }
+  .application-header .header-nav-region { padding:0; border:0; }
+  .application-header .header-navigation { display:none; width:100%; padding:14px; background:#111f33; border-top:1px solid var(--border); border-radius:0 0 14px 14px; }
+  .application-header .header-navigation.menu-open { display:grid; gap:16px; }
+  .application-header .nav-group { display:grid; grid-template-columns:1fr; gap:8px; }
+  .application-header .nav-group p { margin:0; font-size:.65rem; }
+  .application-header .nav-group > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .application-header .nav-secondary { padding-top:14px; }
+  .application-header .header-navigation button { min-height:44px; padding:9px 10px; font-size:.78rem; white-space:normal; text-align:left; }
+}
+@media (max-width:390px) {
+  .header-brand-row { gap:10px; padding:12px; }
+  .application-header .brand { gap:9px; }
+  .application-header h1 { font-size:1.28rem; }
+  .application-header .brand-tagline { max-width:190px; font-size:.67rem; }
+  .application-header .nav-group > div { grid-template-columns:1fr; }
+}
+
 .calculator-display .expression { min-width:0; }
 .calculator-result-panel { min-width:0; margin-top:12px; padding-top:11px; border-top:1px solid var(--border); text-align:right; }
 .calculator-result-label,.calculator-result-value > span,.calculator-result-expression > span { display:block; color:var(--text-subtle); font:500 .65rem/1.35 'DM Mono',monospace; letter-spacing:.09em; text-transform:uppercase; }
